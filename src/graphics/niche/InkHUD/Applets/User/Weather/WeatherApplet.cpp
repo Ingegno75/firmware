@@ -253,7 +253,7 @@ void InkHUD::WeatherFetcher::fetchWeather()
 
     for (uint8_t i = 0; i < 3; i++) {
         uint8_t srcIndex = i + 1; // giorno successivo
-        InkHUD::WeatherDayForecast day;
+        WeatherDayForecast day;
 
         if (srcIndex < dates.size()) {
             std::string date = dates[srcIndex].as<std::string>(); // "YYYY-MM-DD"
