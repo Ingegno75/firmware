@@ -5,6 +5,7 @@
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 
 #include "mesh/wifi/WiFiAPClient.h"
 
@@ -15,8 +16,8 @@ using namespace NicheGraphics;
 // =====================================================================
 // Coordinate del luogo di cui mostrare il meteo.
 // Esempio: Roma = 41.9028, 12.4964 -- Milano = 45.4642, 9.1900
-static constexpr float WEATHER_LATITUDE = 45.068;
-static constexpr float WEATHER_LONGITUDE = 7.577;
+static constexpr float WEATHER_LATITUDE = 41.9028;
+static constexpr float WEATHER_LONGITUDE = 12.4964;
 // =====================================================================
 
 static const char *WEATHER_API_HOST = "https://api.open-meteo.com/v1/forecast";
@@ -214,8 +215,10 @@ void InkHUD::WeatherFetcher::fetchWeather()
              "weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=4",
              WEATHER_API_HOST, WEATHER_LATITUDE, WEATHER_LONGITUDE);
 
+    WiFiClientSecure secureClient;
+    secureClient.setInsecure(); // Non verifichiamo il certificato: sufficiente per una richiesta di sola lettura
     HTTPClient http;
-    http.begin(url);
+    http.begin(secureClient, url);
     http.setTimeout(10000);
     int httpCode = http.GET();
 
