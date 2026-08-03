@@ -235,13 +235,19 @@ void InkHUD::WeatherFetcher::fetchWeather()
         return;
     }
 
-    // Documento JSON con dimensionamento automatico (API ArduinoJson v7)
-    JsonDocument doc;
-    DeserializationError err = deserializeJson(doc, http.getStream());
+    String payload = http.getString();
+    LOG_INFO("Weather: payload size = %d", payload.length());
+    LOG_INFO("Weather JSON BEGIN");
+    Serial.println(payload);
+    LOG_INFO("Weather JSON END");
     http.end();
+
+    JsonDocument doc;
+    DeserializationError err = deserializeJson(doc, payload);
 
     if (err) {
         LOG_ERROR("Weather: errore parsing JSON: %s", err.c_str());
+        LOG_ERROR("Weather: payload size=%d", payload.length());
         applet->markFetchFailed();
         setIntervalFromNow(RETRY_INTERVAL_MS);
         return;
