@@ -202,8 +202,11 @@ int32_t InkHUD::WeatherFetcher::runOnce()
 
 void InkHUD::WeatherFetcher::fetchWeather()
 {
+    LOG_INFO("Weather: tentativo di aggiornamento (wifiAvailable=%d, wifiStatus=%d)", isWifiAvailable(),
+              WiFi.status());
+
     if (!isWifiAvailable() || WiFi.status() != WL_CONNECTED) {
-        // Wi-Fi non ancora pronto (o non configurato): riprova tra poco
+        LOG_WARN("Weather: Wi-Fi non connesso, riprovo tra %d secondi", (int)(RETRY_INTERVAL_MS / 1000));
         applet->markFetchFailed();
         setIntervalFromNow(RETRY_INTERVAL_MS);
         return;
@@ -214,6 +217,7 @@ void InkHUD::WeatherFetcher::fetchWeather()
              "%s?latitude=%.4f&longitude=%.4f&current=temperature_2m,relative_humidity_2m,apparent_temperature,"
              "weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=4",
              WEATHER_API_HOST, WEATHER_LATITUDE, WEATHER_LONGITUDE);
+    LOG_INFO("Weather: chiamata a %s", url);
 
     WiFiClientSecure secureClient;
     secureClient.setInsecure(); // Non verifichiamo il certificato: sufficiente per una richiesta di sola lettura
@@ -221,8 +225,10 @@ void InkHUD::WeatherFetcher::fetchWeather()
     http.begin(secureClient, url);
     http.setTimeout(10000);
     int httpCode = http.GET();
+    LOG_INFO("Weather: risposta HTTP code = %d", httpCode);
 
     if (httpCode != HTTP_CODE_OK) {
+        LOG_ERROR("Weather: richiesta HTTP fallita, codice %d", httpCode);
         http.end();
         applet->markFetchFailed();
         setIntervalFromNow(RETRY_INTERVAL_MS);
@@ -235,6 +241,7 @@ void InkHUD::WeatherFetcher::fetchWeather()
     http.end();
 
     if (err) {
+        LOG_ERROR("Weather: errore parsing JSON: %s", err.c_str());
         applet->markFetchFailed();
         setIntervalFromNow(RETRY_INTERVAL_MS);
         return;
@@ -272,6 +279,8 @@ void InkHUD::WeatherFetcher::fetchWeather()
 
         applet->setForecastDay(i, day);
     }
+
+    LOG_INFO("Weather: aggiornamento completato con successo (%.1f gradi)", tempC);
 }
 
 #endif
