@@ -5,7 +5,6 @@
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
 #include <WiFi.h>
-#include <WiFiClientSecure.h>
 
 #include "mesh/wifi/WiFiAPClient.h"
 
@@ -16,8 +15,8 @@ using namespace NicheGraphics;
 // =====================================================================
 // Coordinate del luogo di cui mostrare il meteo.
 // Esempio: Roma = 41.9028, 12.4964 -- Milano = 45.4642, 9.1900
-static constexpr float WEATHER_LATITUDE = 41.9028;
-static constexpr float WEATHER_LONGITUDE = 12.4964;
+static constexpr float WEATHER_LATITUDE = 45.068;
+static constexpr float WEATHER_LONGITUDE = 7.577;
 // =====================================================================
 
 static const char *WEATHER_API_HOST = "https://api.open-meteo.com/v1/forecast";
@@ -202,11 +201,8 @@ int32_t InkHUD::WeatherFetcher::runOnce()
 
 void InkHUD::WeatherFetcher::fetchWeather()
 {
-    LOG_INFO("Weather: tentativo di aggiornamento (wifiAvailable=%d, wifiStatus=%d)", isWifiAvailable(),
-              WiFi.status());
-
     if (!isWifiAvailable() || WiFi.status() != WL_CONNECTED) {
-        LOG_WARN("Weather: Wi-Fi non connesso, riprovo tra %d secondi", (int)(RETRY_INTERVAL_MS / 1000));
+        // Wi-Fi non ancora pronto (o non configurato): riprova tra poco
         applet->markFetchFailed();
         setIntervalFromNow(RETRY_INTERVAL_MS);
         return;
@@ -217,24 +213,21 @@ void InkHUD::WeatherFetcher::fetchWeather()
              "%s?latitude=%.4f&longitude=%.4f&current=temperature_2m,relative_humidity_2m,apparent_temperature,"
              "weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=4",
              WEATHER_API_HOST, WEATHER_LATITUDE, WEATHER_LONGITUDE);
-    LOG_INFO("Weather: chiamata a %s", url);
 
-    WiFiClientSecure secureClient;
-    secureClient.setInsecure(); // Non verifichiamo il certificato: sufficiente per una richiesta di sola lettura
     HTTPClient http;
-    http.begin(secureClient, url);
+    http.begin(url);
     http.setTimeout(10000);
     int httpCode = http.GET();
-    LOG_INFO("Weather: risposta HTTP code = %d", httpCode);
 
     if (httpCode != HTTP_CODE_OK) {
-        LOG_ERROR("Weather: richiesta HTTP fallita, codice %d", httpCode);
         http.end();
         applet->markFetchFailed();
         setIntervalFromNow(RETRY_INTERVAL_MS);
         return;
     }
 
+    // Documento JSON con dimensionamento automatico (API ArduinoJson v7)
+    JsonDocument doc;
     String payload = http.getString();
     LOG_INFO("Weather: payload size = %d", payload.length());
     LOG_INFO("Weather JSON BEGIN");
@@ -242,12 +235,9 @@ void InkHUD::WeatherFetcher::fetchWeather()
     LOG_INFO("Weather JSON END");
     http.end();
 
-    JsonDocument doc;
     DeserializationError err = deserializeJson(doc, payload);
 
     if (err) {
-        LOG_ERROR("Weather: errore parsing JSON: %s", err.c_str());
-        LOG_ERROR("Weather: payload size=%d", payload.length());
         applet->markFetchFailed();
         setIntervalFromNow(RETRY_INTERVAL_MS);
         return;
@@ -269,7 +259,7 @@ void InkHUD::WeatherFetcher::fetchWeather()
 
     for (uint8_t i = 0; i < 3; i++) {
         uint8_t srcIndex = i + 1; // giorno successivo
-        WeatherDayForecast day;
+        InkHUD::WeatherDayForecast day;
 
         if (srcIndex < dates.size()) {
             std::string date = dates[srcIndex].as<std::string>(); // "YYYY-MM-DD"
@@ -285,8 +275,6 @@ void InkHUD::WeatherFetcher::fetchWeather()
 
         applet->setForecastDay(i, day);
     }
-
-    LOG_INFO("Weather: aggiornamento completato con successo (%.1f gradi)", tempC);
 }
 
 #endif
