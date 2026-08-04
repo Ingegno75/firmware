@@ -16,8 +16,8 @@ using namespace NicheGraphics;
 // =====================================================================
 // Coordinate del luogo di cui mostrare il meteo.
 // Esempio: Roma = 41.9028, 12.4964 -- Milano = 45.4642, 9.1900
-static constexpr float WEATHER_LATITUDE = 41.9028;
-static constexpr float WEATHER_LONGITUDE = 12.4964;
+static constexpr float WEATHER_LATITUDE = 45.068;
+static constexpr float WEATHER_LONGITUDE = 7.577;
 // =====================================================================
 
 static const char *WEATHER_API_HOST = "https://api.open-meteo.com/v1/forecast";
@@ -235,10 +235,14 @@ void InkHUD::WeatherFetcher::fetchWeather()
         return;
     }
 
+    // Leggiamo prima l'intera risposta come testo, poi la interpretiamo:
+    // più affidabile dello streaming diretto quando si usa HTTPS su ESP32
+    String payload = http.getString();
+    http.end();
+
     // Documento JSON con dimensionamento automatico (API ArduinoJson v7)
     JsonDocument doc;
-    DeserializationError err = deserializeJson(doc, http.getStream());
-    http.end();
+    DeserializationError err = deserializeJson(doc, payload);
 
     if (err) {
         LOG_ERROR("Weather: errore parsing JSON: %s", err.c_str());
