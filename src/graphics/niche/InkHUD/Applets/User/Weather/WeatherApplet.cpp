@@ -5,6 +5,7 @@
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 
 #include "mesh/wifi/WiFiAPClient.h"
 
@@ -15,8 +16,8 @@ using namespace NicheGraphics;
 // =====================================================================
 // Coordinate del luogo di cui mostrare il meteo.
 // Esempio: Roma = 41.9028, 12.4964 -- Milano = 45.4642, 9.1900
-static constexpr float WEATHER_LATITUDE = 45.068;
-static constexpr float WEATHER_LONGITUDE = 7.577;
+static constexpr float WEATHER_LATITUDE = 41.9028;
+static constexpr float WEATHER_LONGITUDE = 12.4964;
 // =====================================================================
 
 static const char *WEATHER_API_HOST = "https://api.open-meteo.com/v1/forecast";
@@ -88,12 +89,12 @@ std::string InkHUD::WeatherApplet::describeWeatherCode(int code)
 
 void InkHUD::WeatherApplet::drawWeatherIcon(int16_t cx, int16_t cy, uint16_t size, int weatherCode)
 {
-    // Icone essenziali disegnate con forme geometriche (schermo monocromatico)
+    // Icone essenziali disegnate con forme geometriche a contorno (schermo monocromatico)
     uint16_t r = size / 2;
 
     if (weatherCode == 0) {
-        // Sole: cerchio pieno + raggi
-        fillCircle(cx, cy, r * 0.6, BLACK);
+        // Sole: cerchio a contorno + raggi
+        drawCircle(cx, cy, r * 0.6, BLACK);
         for (int i = 0; i < 8; i++) {
             float angle = i * (PI / 4);
             int16_t x1 = cx + cos(angle) * r * 0.75;
@@ -103,30 +104,30 @@ void InkHUD::WeatherApplet::drawWeatherIcon(int16_t cx, int16_t cy, uint16_t siz
             drawLine(x1, y1, x2, y2, BLACK);
         }
     } else if (weatherCode <= 3) {
-        // Poco nuvoloso: sole parziale + nuvola
-        fillCircle(cx - r * 0.3, cy - r * 0.2, r * 0.45, BLACK);
-        fillCircle(cx + r * 0.15, cy + r * 0.2, r * 0.5, BLACK);
-        fillCircle(cx + r * 0.55, cy + r * 0.15, r * 0.35, BLACK);
+        // Poco nuvoloso: sole parziale + nuvola, a contorno
+        drawCircle(cx - r * 0.3, cy - r * 0.2, r * 0.45, BLACK);
+        drawCircle(cx + r * 0.15, cy + r * 0.2, r * 0.5, BLACK);
+        drawCircle(cx + r * 0.55, cy + r * 0.15, r * 0.35, BLACK);
     } else if (weatherCode == 45 || weatherCode == 48) {
         // Nebbia: linee orizzontali
         for (int i = -2; i <= 2; i++)
             drawLine(cx - r, cy + i * (r / 3), cx + r, cy + i * (r / 3), BLACK);
     } else if ((weatherCode >= 51 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 82)) {
-        // Pioggia: nuvola + gocce
-        fillCircle(cx - r * 0.25, cy - r * 0.3, r * 0.4, BLACK);
-        fillCircle(cx + r * 0.2, cy - r * 0.15, r * 0.45, BLACK);
+        // Pioggia: nuvola a contorno + gocce
+        drawCircle(cx - r * 0.25, cy - r * 0.3, r * 0.4, BLACK);
+        drawCircle(cx + r * 0.2, cy - r * 0.15, r * 0.45, BLACK);
         for (int i = -1; i <= 1; i++)
             drawLine(cx + i * (r / 2), cy + r * 0.2, cx + i * (r / 2) - 3, cy + r * 0.8, BLACK);
     } else if (weatherCode >= 71 && weatherCode <= 77) {
-        // Neve: nuvola + fiocchi (punti)
-        fillCircle(cx - r * 0.2, cy - r * 0.3, r * 0.4, BLACK);
-        fillCircle(cx + r * 0.2, cy - r * 0.15, r * 0.4, BLACK);
+        // Neve: nuvola a contorno + fiocchi (punti)
+        drawCircle(cx - r * 0.2, cy - r * 0.3, r * 0.4, BLACK);
+        drawCircle(cx + r * 0.2, cy - r * 0.15, r * 0.4, BLACK);
         for (int i = -1; i <= 1; i++)
-            fillCircle(cx + i * (r / 2), cy + r * 0.6, 2, BLACK);
+            drawCircle(cx + i * (r / 2), cy + r * 0.6, 2, BLACK);
     } else if (weatherCode >= 95) {
-        // Temporale: nuvola + fulmine
-        fillCircle(cx - r * 0.2, cy - r * 0.3, r * 0.4, BLACK);
-        fillCircle(cx + r * 0.2, cy - r * 0.15, r * 0.45, BLACK);
+        // Temporale: nuvola a contorno + fulmine
+        drawCircle(cx - r * 0.2, cy - r * 0.3, r * 0.4, BLACK);
+        drawCircle(cx + r * 0.2, cy - r * 0.15, r * 0.45, BLACK);
         drawLine(cx, cy + r * 0.1, cx - 4, cy + r * 0.5, BLACK);
         drawLine(cx - 4, cy + r * 0.5, cx + 3, cy + r * 0.5, BLACK);
         drawLine(cx + 3, cy + r * 0.5, cx - 2, cy + r * 0.9, BLACK);
@@ -147,17 +148,17 @@ void InkHUD::WeatherApplet::onRender(bool full)
     // ---- Riga superiore: condizioni attuali, testo grande ----
     setFont(fontLarge);
     char tempStr[16];
-    snprintf(tempStr, sizeof(tempStr), "%.0f\xC2\xB0" "C", currentTempC);
+    snprintf(tempStr, sizeof(tempStr), "%.0f\xB0" "C", currentTempC);
     printAt(X(0.02), Y(0.02), tempStr, LEFT, TOP);
 
-    drawWeatherIcon(X(0.82), Y(0.22), Y(0.34), currentWeatherCode);
+    drawWeatherIcon(X(0.82), Y(0.20), Y(0.32), currentWeatherCode);
 
     setFont(fontMedium);
     printAt(X(0.02), Y(0.30), describeWeatherCode(currentWeatherCode), LEFT, TOP);
 
     setFont(fontSmall);
     char subStr[48];
-    snprintf(subStr, sizeof(subStr), "Percepita %.0f\xC2\xB0" "C - Umidita %d%%", currentFeelsLikeC, currentHumidity);
+    snprintf(subStr, sizeof(subStr), "Percepita %.0f\xB0" "C - Umidita %d%%", currentFeelsLikeC, currentHumidity);
     printAt(X(0.02), Y(0.44), subStr, LEFT, TOP);
 
     // ---- Linea divisoria ----
@@ -171,12 +172,12 @@ void InkHUD::WeatherApplet::onRender(bool full)
         setFont(fontSmall);
         printAt(colCenter, Y(0.58), forecast[i].dayLabel, CENTER, TOP);
 
-        drawWeatherIcon(colCenter, Y(0.78), Y(0.18), forecast[i].weatherCode);
+        drawWeatherIcon(colCenter, Y(0.70), Y(0.16), forecast[i].weatherCode);
 
         setFont(fontMedium);
         char range[16];
-        snprintf(range, sizeof(range), "%d/%d\xC2\xB0", forecast[i].tempMaxC, forecast[i].tempMinC);
-        printAt(colCenter, Y(0.92), range, CENTER, TOP);
+        snprintf(range, sizeof(range), "%d/%d\xB0", forecast[i].tempMaxC, forecast[i].tempMinC);
+        printAt(colCenter, Y(0.86), range, CENTER, TOP);
 
         if (i > 0)
             drawLine(colWidth * i, Y(0.55), colWidth * i, Y(1.0), BLACK);
@@ -201,8 +202,11 @@ int32_t InkHUD::WeatherFetcher::runOnce()
 
 void InkHUD::WeatherFetcher::fetchWeather()
 {
+    LOG_INFO("Weather: tentativo di aggiornamento (wifiAvailable=%d, wifiStatus=%d)", isWifiAvailable(),
+              WiFi.status());
+
     if (!isWifiAvailable() || WiFi.status() != WL_CONNECTED) {
-        // Wi-Fi non ancora pronto (o non configurato): riprova tra poco
+        LOG_WARN("Weather: Wi-Fi non connesso, riprovo tra %d secondi", (int)(RETRY_INTERVAL_MS / 1000));
         applet->markFetchFailed();
         setIntervalFromNow(RETRY_INTERVAL_MS);
         return;
@@ -213,13 +217,18 @@ void InkHUD::WeatherFetcher::fetchWeather()
              "%s?latitude=%.4f&longitude=%.4f&current=temperature_2m,relative_humidity_2m,apparent_temperature,"
              "weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=4",
              WEATHER_API_HOST, WEATHER_LATITUDE, WEATHER_LONGITUDE);
+    LOG_INFO("Weather: chiamata a %s", url);
 
+    WiFiClientSecure secureClient;
+    secureClient.setInsecure(); // Non verifichiamo il certificato: sufficiente per una richiesta di sola lettura
     HTTPClient http;
-    http.begin(url);
+    http.begin(secureClient, url);
     http.setTimeout(10000);
     int httpCode = http.GET();
+    LOG_INFO("Weather: risposta HTTP code = %d", httpCode);
 
     if (httpCode != HTTP_CODE_OK) {
+        LOG_ERROR("Weather: richiesta HTTP fallita, codice %d", httpCode);
         http.end();
         applet->markFetchFailed();
         setIntervalFromNow(RETRY_INTERVAL_MS);
@@ -228,16 +237,11 @@ void InkHUD::WeatherFetcher::fetchWeather()
 
     // Documento JSON con dimensionamento automatico (API ArduinoJson v7)
     JsonDocument doc;
-    String payload = http.getString();
-    LOG_INFO("Weather: payload size = %d", payload.length());
-    LOG_INFO("Weather JSON BEGIN");
-    Serial.println(payload);
-    LOG_INFO("Weather JSON END");
+    DeserializationError err = deserializeJson(doc, http.getStream());
     http.end();
 
-    DeserializationError err = deserializeJson(doc, payload);
-
     if (err) {
+        LOG_ERROR("Weather: errore parsing JSON: %s", err.c_str());
         applet->markFetchFailed();
         setIntervalFromNow(RETRY_INTERVAL_MS);
         return;
@@ -259,7 +263,7 @@ void InkHUD::WeatherFetcher::fetchWeather()
 
     for (uint8_t i = 0; i < 3; i++) {
         uint8_t srcIndex = i + 1; // giorno successivo
-        InkHUD::WeatherDayForecast day;
+        WeatherDayForecast day;
 
         if (srcIndex < dates.size()) {
             std::string date = dates[srcIndex].as<std::string>(); // "YYYY-MM-DD"
@@ -275,6 +279,8 @@ void InkHUD::WeatherFetcher::fetchWeather()
 
         applet->setForecastDay(i, day);
     }
+
+    LOG_INFO("Weather: aggiornamento completato con successo (%.1f gradi)", tempC);
 }
 
 #endif
