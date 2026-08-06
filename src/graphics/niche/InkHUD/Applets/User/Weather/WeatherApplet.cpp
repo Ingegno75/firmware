@@ -153,16 +153,19 @@ void InkHUD::WeatherApplet::onRender(bool full)
 
     drawWeatherIcon(X(0.82), Y(0.20), Y(0.32), currentWeatherCode);
 
-    setFont(fontMedium);
-    printAt(X(0.02), Y(0.30), describeWeatherCode(currentWeatherCode), LEFT, TOP);
-
     setFont(fontSmall);
-    char subStr[48];
-    snprintf(subStr, sizeof(subStr), "Percepita %.0f\xB0" "C - Umidita %d%%", currentFeelsLikeC, currentHumidity);
-    printAt(X(0.02), Y(0.44), subStr, LEFT, TOP);
+    char humidStr[24];
+    snprintf(humidStr, sizeof(humidStr), "Umidita %d%%", currentHumidity);
+    printAt(X(0.02), Y(0.24), humidStr, LEFT, TOP);
+
+    // ---- Riga centrale: temperatura percepita (più leggibile) ----
+    setFont(fontMedium);
+    char feelsStr[48];
+    snprintf(feelsStr, sizeof(feelsStr), "Percepita a Grugliasco: %.0f\xB0" "C", currentFeelsLikeC);
+    printAt(X(0.02), Y(0.42), feelsStr, LEFT, TOP);
 
     // ---- Linea divisoria ----
-    drawLine(X(0.0), Y(0.52), X(1.0), Y(0.52), BLACK);
+    drawLine(X(0.0), Y(0.55), X(1.0), Y(0.55), BLACK);
 
     // ---- Riga inferiore: previsione 3 giorni, 3 colonne uguali ----
     uint16_t colWidth = X(1.0) / FORECAST_DAYS;
@@ -170,17 +173,17 @@ void InkHUD::WeatherApplet::onRender(bool full)
         int16_t colCenter = colWidth * i + colWidth / 2;
 
         setFont(fontSmall);
-        printAt(colCenter, Y(0.58), forecast[i].dayLabel, CENTER, TOP);
+        printAt(colCenter, Y(0.60), forecast[i].dayLabel, CENTER, TOP);
 
-        drawWeatherIcon(colCenter, Y(0.70), Y(0.16), forecast[i].weatherCode);
+        drawWeatherIcon(colCenter, Y(0.72), Y(0.14), forecast[i].weatherCode);
 
         setFont(fontMedium);
         char range[16];
         snprintf(range, sizeof(range), "%d/%d\xB0", forecast[i].tempMaxC, forecast[i].tempMinC);
-        printAt(colCenter, Y(0.86), range, CENTER, TOP);
+        printAt(colCenter, Y(0.88), range, CENTER, TOP);
 
         if (i > 0)
-            drawLine(colWidth * i, Y(0.55), colWidth * i, Y(1.0), BLACK);
+            drawLine(colWidth * i, Y(0.58), colWidth * i, Y(1.0), BLACK);
     }
 }
 
