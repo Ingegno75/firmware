@@ -22,13 +22,7 @@ Different NicheGraphics UIs and different hardware variants will each have their
 #include "graphics/niche/InkHUD/InkHUD.h"
 
 // Applets
-#include "graphics/niche/InkHUD/Applets/User/AllMessage/AllMessageApplet.h"
-#include "graphics/niche/InkHUD/Applets/User/DM/DMApplet.h"
-#include "graphics/niche/InkHUD/Applets/User/FavoritesMap/FavoritesMapApplet.h"
-#include "graphics/niche/InkHUD/Applets/User/Heard/HeardApplet.h"
-#include "graphics/niche/InkHUD/Applets/User/Positions/PositionsApplet.h"
-#include "graphics/niche/InkHUD/Applets/User/RecentsList/RecentsListApplet.h"
-#include "graphics/niche/InkHUD/Applets/User/ThreadedMessage/ThreadedMessageApplet.h"
+#include "graphics/niche/InkHUD/Applets/User/Weather/WeatherApplet.h"
 
 // Shared NicheGraphics components
 // --------------------------------
@@ -79,15 +73,8 @@ void setupNicheGraphics()
     inkhud->persistence->settings.optionalMenuItems.nextTile = false; // Behavior handled by aux button instead
 
     // Pick applets
-    // Note: order of applets determines priority of "auto-show" feature
-    inkhud->addApplet("All Messages", new InkHUD::AllMessageApplet, true, true); // Activated, autoshown
-    inkhud->addApplet("DMs", new InkHUD::DMApplet);                              // -
-    inkhud->addApplet("Channel 0", new InkHUD::ThreadedMessageApplet(0));        // -
-    inkhud->addApplet("Channel 1", new InkHUD::ThreadedMessageApplet(1));        // -
-    inkhud->addApplet("Positions", new InkHUD::PositionsApplet, true);           // Activated
-    inkhud->addApplet("Favorites Map", new InkHUD::FavoritesMapApplet);          // -
-    inkhud->addApplet("Recents List", new InkHUD::RecentsListApplet);            // -
-    inkhud->addApplet("Heard", new InkHUD::HeardApplet, true, false, 0);         // Activated, not autoshown, default on tile 0
+    // Solo l'applet Meteo: attiva e mostrata in primo piano di default
+    inkhud->addApplet("Meteo", new InkHUD::WeatherApplet, true, true);
 
     // Start running InkHUD
     inkhud->begin();
