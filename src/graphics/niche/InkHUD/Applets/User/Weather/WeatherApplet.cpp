@@ -89,50 +89,70 @@ std::string InkHUD::WeatherApplet::describeWeatherCode(int code)
 
 void InkHUD::WeatherApplet::drawWeatherIcon(int16_t cx, int16_t cy, uint16_t size, int weatherCode)
 {
-    // Icone essenziali disegnate con forme geometriche a contorno (schermo monocromatico)
+    // Icone molto semplici e leggibili per e-ink, con bordi spessi
     uint16_t r = size / 2;
 
     if (weatherCode == 0) {
-        // Sole: cerchio a contorno + raggi
-        drawCircle(cx, cy, r * 0.6, BLACK);
-        for (int i = 0; i < 8; i++) {
-            float angle = i * (PI / 4);
-            int16_t x1 = cx + cos(angle) * r * 0.75;
-            int16_t y1 = cy + sin(angle) * r * 0.75;
-            int16_t x2 = cx + cos(angle) * r;
-            int16_t y2 = cy + sin(angle) * r;
-            drawLine(x1, y1, x2, y2, BLACK);
-        }
+        // SOLE: cerchio + 4 raggi spessi ai cardinal points
+        drawCircle(cx, cy, r * 0.5, BLACK);
+        drawCircle(cx, cy, r * 0.5 + 1, BLACK); // Raddoppio il bordo
+        // Raggi orizzontali e verticali (solo 4, più leggibili)
+        drawLine(cx - r * 0.75, cy, cx - r, cy, BLACK);
+        drawLine(cx + r * 0.75, cy, cx + r, cy, BLACK);
+        drawLine(cx, cy - r * 0.75, cx, cy - r, BLACK);
+        drawLine(cx, cy + r * 0.75, cx, cy + r, BLACK);
+
     } else if (weatherCode <= 3) {
-        // Poco nuvoloso: sole parziale + nuvola, a contorno
-        drawCircle(cx - r * 0.3, cy - r * 0.2, r * 0.45, BLACK);
-        drawCircle(cx + r * 0.15, cy + r * 0.2, r * 0.5, BLACK);
-        drawCircle(cx + r * 0.55, cy + r * 0.15, r * 0.35, BLACK);
+        // NUVOLOSO: due cerchi a contorno, non pieni
+        drawCircle(cx - r * 0.2, cy - r * 0.15, r * 0.4, BLACK);
+        drawCircle(cx - r * 0.2, cy - r * 0.15, r * 0.4 + 1, BLACK);
+        drawCircle(cx + r * 0.3, cy, r * 0.45, BLACK);
+        drawCircle(cx + r * 0.3, cy, r * 0.45 + 1, BLACK);
+
     } else if (weatherCode == 45 || weatherCode == 48) {
-        // Nebbia: linee orizzontali
-        for (int i = -2; i <= 2; i++)
-            drawLine(cx - r, cy + i * (r / 3), cx + r, cy + i * (r / 3), BLACK);
+        // NEBBIA: linee orizzontali parallele spesse
+        for (int i = -2; i <= 2; i++) {
+            int16_t y = cy + i * (r / 2.5);
+            drawLine(cx - r * 0.7, y, cx + r * 0.7, y, BLACK);
+        }
+
     } else if ((weatherCode >= 51 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 82)) {
-        // Pioggia: nuvola a contorno + gocce
-        drawCircle(cx - r * 0.25, cy - r * 0.3, r * 0.4, BLACK);
-        drawCircle(cx + r * 0.2, cy - r * 0.15, r * 0.45, BLACK);
-        for (int i = -1; i <= 1; i++)
-            drawLine(cx + i * (r / 2), cy + r * 0.2, cx + i * (r / 2) - 3, cy + r * 0.8, BLACK);
+        // PIOGGIA: nuvola + 3 gocce (linee diagonali)
+        drawCircle(cx - r * 0.2, cy - r * 0.2, r * 0.35, BLACK);
+        drawCircle(cx - r * 0.2, cy - r * 0.2, r * 0.35 + 1, BLACK);
+        drawCircle(cx + r * 0.25, cy - r * 0.05, r * 0.4, BLACK);
+        drawCircle(cx + r * 0.25, cy - r * 0.05, r * 0.4 + 1, BLACK);
+        // Gocce: linee diagonali spesse
+        drawLine(cx - r * 0.3, cy + r * 0.15, cx - r * 0.3 - 2, cy + r * 0.5, BLACK);
+        drawLine(cx, cy + r * 0.15, cx - 2, cy + r * 0.5, BLACK);
+        drawLine(cx + r * 0.3, cy + r * 0.15, cx + r * 0.3 - 2, cy + r * 0.5, BLACK);
+
     } else if (weatherCode >= 71 && weatherCode <= 77) {
-        // Neve: nuvola a contorno + fiocchi (punti)
-        drawCircle(cx - r * 0.2, cy - r * 0.3, r * 0.4, BLACK);
-        drawCircle(cx + r * 0.2, cy - r * 0.15, r * 0.4, BLACK);
-        for (int i = -1; i <= 1; i++)
-            drawCircle(cx + i * (r / 2), cy + r * 0.6, 2, BLACK);
+        // NEVE: nuvola + fiocchi (puntini)
+        drawCircle(cx - r * 0.15, cy - r * 0.2, r * 0.35, BLACK);
+        drawCircle(cx - r * 0.15, cy - r * 0.2, r * 0.35 + 1, BLACK);
+        drawCircle(cx + r * 0.3, cy - r * 0.05, r * 0.4, BLACK);
+        drawCircle(cx + r * 0.3, cy - r * 0.05, r * 0.4 + 1, BLACK);
+        // Fiocchi: cerchietti piccoli
+        fillCircle(cx - r * 0.2, cy + r * 0.35, 2, BLACK);
+        fillCircle(cx, cy + r * 0.4, 2, BLACK);
+        fillCircle(cx + r * 0.2, cy + r * 0.35, 2, BLACK);
+
     } else if (weatherCode >= 95) {
-        // Temporale: nuvola a contorno + fulmine
-        drawCircle(cx - r * 0.2, cy - r * 0.3, r * 0.4, BLACK);
-        drawCircle(cx + r * 0.2, cy - r * 0.15, r * 0.45, BLACK);
-        drawLine(cx, cy + r * 0.1, cx - 4, cy + r * 0.5, BLACK);
-        drawLine(cx - 4, cy + r * 0.5, cx + 3, cy + r * 0.5, BLACK);
-        drawLine(cx + 3, cy + r * 0.5, cx - 2, cy + r * 0.9, BLACK);
+        // TEMPORALE: nuvola + fulmine semplice e spesso
+        drawCircle(cx - r * 0.15, cy - r * 0.2, r * 0.35, BLACK);
+        drawCircle(cx - r * 0.15, cy - r * 0.2, r * 0.35 + 1, BLACK);
+        drawCircle(cx + r * 0.3, cy - r * 0.05, r * 0.4, BLACK);
+        drawCircle(cx + r * 0.3, cy - r * 0.05, r * 0.4 + 1, BLACK);
+        // Fulmine: zeta semplice
+        drawLine(cx - 1, cy + r * 0.1, cx - 3, cy + r * 0.3, BLACK);
+        drawLine(cx - 3, cy + r * 0.3, cx + 1, cy + r * 0.3, BLACK);
+        drawLine(cx + 1, cy + r * 0.3, cx - 1, cy + r * 0.5, BLACK);
+
     } else {
-        drawCircle(cx, cy, r * 0.6, BLACK);
+        // DEFAULT: cerchio semplice
+        drawCircle(cx, cy, r * 0.5, BLACK);
+        drawCircle(cx, cy, r * 0.5 + 1, BLACK);
     }
 }
 
@@ -145,45 +165,61 @@ void InkHUD::WeatherApplet::onRender(bool full)
         return;
     }
 
-    // ---- Riga superiore: condizioni attuali, testo grande ----
+    // ---- Riga superiore: data sinistra + temp + umidita + icona grande destra ----
     setFont(fontLarge);
+    
+    // Data: "08 Agosto" (approssimata, non abbiamo il calendario reale, usiamo valori statici per ora)
+    // In produzione questo verrebbe dal sistema RTC
+    printAt(X(0.02), Y(0.02), "08 Agosto", LEFT, TOP);
+
+    // Temperatura attuale
     char tempStr[16];
     snprintf(tempStr, sizeof(tempStr), "%.0f\xB0" "C", currentTempC);
-    printAt(X(0.02), Y(0.02), tempStr, LEFT, TOP);
+    printAt(X(0.02), Y(0.12), tempStr, LEFT, TOP);
 
-    drawWeatherIcon(X(0.82), Y(0.20), Y(0.32), currentWeatherCode);
-
+    // Umidità
     setFont(fontSmall);
     char humidStr[24];
     snprintf(humidStr, sizeof(humidStr), "Umidita %d%%", currentHumidity);
-    printAt(X(0.02), Y(0.24), humidStr, LEFT, TOP);
+    printAt(X(0.02), Y(0.22), humidStr, LEFT, TOP);
+
+    // Icona meteo GRANDE a destra (doppia dimensione)
+    drawWeatherIcon(X(0.82), Y(0.15), Y(0.28), currentWeatherCode);
 
     // ---- Riga centrale: temperatura percepita (più leggibile) ----
-    setFont(fontMedium);
+    setFont(fontSmall);
     char feelsStr[48];
     snprintf(feelsStr, sizeof(feelsStr), "Percepita a Grugliasco: %.0f\xB0" "C", currentFeelsLikeC);
-    printAt(X(0.02), Y(0.42), feelsStr, LEFT, TOP);
+    printAt(X(0.02), Y(0.38), feelsStr, LEFT, TOP);
 
     // ---- Linea divisoria ----
-    drawLine(X(0.0), Y(0.55), X(1.0), Y(0.55), BLACK);
+    drawLine(X(0.0), Y(0.48), X(1.0), Y(0.48), BLACK);
 
-    // ---- Riga inferiore: previsione 3 giorni, 3 colonne uguali ----
+    // ---- Riga inferiore: previsione 3 giorni con layout nuovo ----
+    // 3 colonne uguali, ogni colonna ha: icona grande a sinistra, temp max sopra a destra, temp min sotto a destra
     uint16_t colWidth = X(1.0) / FORECAST_DAYS;
     for (uint8_t i = 0; i < FORECAST_DAYS; i++) {
-        int16_t colCenter = colWidth * i + colWidth / 2;
+        int16_t colLeft = colWidth * i;
+        int16_t colCenter = colLeft + colWidth / 2;
 
-        setFont(fontSmall);
-        printAt(colCenter, Y(0.60), forecast[i].dayLabel, CENTER, TOP);
+        // Icona grande a SINISTRA della colonna (non centrata)
+        drawWeatherIcon(colLeft + X(0.08), Y(0.72), Y(0.18), forecast[i].weatherCode);
 
-        drawWeatherIcon(colCenter, Y(0.72), Y(0.14), forecast[i].weatherCode);
-
+        // Temperatura MAX a DESTRA, in alto
         setFont(fontMedium);
-        char range[16];
-        snprintf(range, sizeof(range), "%d/%d\xB0", forecast[i].tempMaxC, forecast[i].tempMinC);
-        printAt(colCenter, Y(0.88), range, CENTER, TOP);
+        char tempMax[8];
+        snprintf(tempMax, sizeof(tempMax), "%d\xB0", forecast[i].tempMaxC);
+        printAt(colLeft + X(0.22), Y(0.52), tempMax, RIGHT, TOP);
 
+        // Temperatura MIN a DESTRA, in basso
+        setFont(fontMedium);
+        char tempMin[8];
+        snprintf(tempMin, sizeof(tempMin), "%d\xB0", forecast[i].tempMinC);
+        printAt(colLeft + X(0.22), Y(0.68), tempMin, RIGHT, TOP);
+
+        // Linea verticale tra colonne (se non è l'ultima)
         if (i > 0)
-            drawLine(colWidth * i, Y(0.58), colWidth * i, Y(1.0), BLACK);
+            drawLine(colWidth * i, Y(0.50), colWidth * i, Y(1.0), BLACK);
     }
 }
 
