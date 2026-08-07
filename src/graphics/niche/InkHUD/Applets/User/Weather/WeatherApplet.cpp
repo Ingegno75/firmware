@@ -89,70 +89,61 @@ std::string InkHUD::WeatherApplet::describeWeatherCode(int code)
 
 void InkHUD::WeatherApplet::drawWeatherIcon(int16_t cx, int16_t cy, uint16_t size, int weatherCode)
 {
-    // Icone molto semplici e leggibili per e-ink, con bordi spessi
+    // Icone MOLTO SEMPLICI e INTUITIVE per e-ink: piene, non contorno, molto leggibili
     uint16_t r = size / 2;
 
     if (weatherCode == 0) {
-        // SOLE: cerchio + 4 raggi spessi ai cardinal points
-        drawCircle(cx, cy, r * 0.5, BLACK);
-        drawCircle(cx, cy, r * 0.5 + 1, BLACK); // Raddoppio il bordo
-        // Raggi orizzontali e verticali (solo 4, più leggibili)
-        drawLine(cx - r * 0.75, cy, cx - r, cy, BLACK);
-        drawLine(cx + r * 0.75, cy, cx + r, cy, BLACK);
-        drawLine(cx, cy - r * 0.75, cx, cy - r, BLACK);
-        drawLine(cx, cy + r * 0.75, cx, cy + r, BLACK);
+        // SOLE: cerchio pieno
+        fillCircle(cx, cy, r * 0.55, BLACK);
 
     } else if (weatherCode <= 3) {
-        // NUVOLOSO: due cerchi a contorno, non pieni
-        drawCircle(cx - r * 0.2, cy - r * 0.15, r * 0.4, BLACK);
-        drawCircle(cx - r * 0.2, cy - r * 0.15, r * 0.4 + 1, BLACK);
-        drawCircle(cx + r * 0.3, cy, r * 0.45, BLACK);
-        drawCircle(cx + r * 0.3, cy, r * 0.45 + 1, BLACK);
+        // SOLE CON NUVOLA: sole pieno piccolo + nuvola
+        fillCircle(cx - r * 0.25, cy - r * 0.15, r * 0.35, BLACK); // sole piccolo
+        // Nuvola (due cerchi che si sovrappongono)
+        fillCircle(cx + r * 0.15, cy + r * 0.1, r * 0.4, BLACK);
+        fillCircle(cx + r * 0.45, cy + r * 0.1, r * 0.35, BLACK);
 
     } else if (weatherCode == 45 || weatherCode == 48) {
-        // NEBBIA: linee orizzontali parallele spesse
+        // NEBBIA: rettangolo/linee orizzontali piene
         for (int i = -2; i <= 2; i++) {
-            int16_t y = cy + i * (r / 2.5);
-            drawLine(cx - r * 0.7, y, cx + r * 0.7, y, BLACK);
+            int16_t y = cy + i * (r / 2.2);
+            drawLine(cx - r * 0.65, y, cx + r * 0.65, y, BLACK);
+            drawLine(cx - r * 0.65, y + 1, cx + r * 0.65, y + 1, BLACK); // Raddoppio lo spessore
         }
 
     } else if ((weatherCode >= 51 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 82)) {
-        // PIOGGIA: nuvola + 3 gocce (linee diagonali)
-        drawCircle(cx - r * 0.2, cy - r * 0.2, r * 0.35, BLACK);
-        drawCircle(cx - r * 0.2, cy - r * 0.2, r * 0.35 + 1, BLACK);
-        drawCircle(cx + r * 0.25, cy - r * 0.05, r * 0.4, BLACK);
-        drawCircle(cx + r * 0.25, cy - r * 0.05, r * 0.4 + 1, BLACK);
-        // Gocce: linee diagonali spesse
-        drawLine(cx - r * 0.3, cy + r * 0.15, cx - r * 0.3 - 2, cy + r * 0.5, BLACK);
-        drawLine(cx, cy + r * 0.15, cx - 2, cy + r * 0.5, BLACK);
-        drawLine(cx + r * 0.3, cy + r * 0.15, cx + r * 0.3 - 2, cy + r * 0.5, BLACK);
+        // NUVOLA CON GOCCE: nuvola piena + gocce sotto
+        // Nuvola (due cerchi che si sovrappongono)
+        fillCircle(cx - r * 0.2, cy - r * 0.15, r * 0.4, BLACK);
+        fillCircle(cx + r * 0.25, cy - r * 0.05, r * 0.4, BLACK);
+        // Gocce (linee diagonali spesse + puntini)
+        fillCircle(cx - r * 0.25, cy + r * 0.45, 3, BLACK);
+        fillCircle(cx + r * 0.05, cy + r * 0.45, 3, BLACK);
+        fillCircle(cx + r * 0.35, cy + r * 0.45, 3, BLACK);
 
     } else if (weatherCode >= 71 && weatherCode <= 77) {
-        // NEVE: nuvola + fiocchi (puntini)
-        drawCircle(cx - r * 0.15, cy - r * 0.2, r * 0.35, BLACK);
-        drawCircle(cx - r * 0.15, cy - r * 0.2, r * 0.35 + 1, BLACK);
-        drawCircle(cx + r * 0.3, cy - r * 0.05, r * 0.4, BLACK);
-        drawCircle(cx + r * 0.3, cy - r * 0.05, r * 0.4 + 1, BLACK);
-        // Fiocchi: cerchietti piccoli
-        fillCircle(cx - r * 0.2, cy + r * 0.35, 2, BLACK);
-        fillCircle(cx, cy + r * 0.4, 2, BLACK);
-        fillCircle(cx + r * 0.2, cy + r * 0.35, 2, BLACK);
+        // NEVE: nuvola piena + fiocchi (puntini più grandi)
+        // Nuvola (due cerchi che si sovrappongono)
+        fillCircle(cx - r * 0.2, cy - r * 0.15, r * 0.4, BLACK);
+        fillCircle(cx + r * 0.25, cy - r * 0.05, r * 0.4, BLACK);
+        // Fiocchi (puntini)
+        fillCircle(cx - r * 0.25, cy + r * 0.45, 3, BLACK);
+        fillCircle(cx + r * 0.05, cy + r * 0.45, 3, BLACK);
+        fillCircle(cx + r * 0.35, cy + r * 0.45, 3, BLACK);
 
     } else if (weatherCode >= 95) {
-        // TEMPORALE: nuvola + fulmine semplice e spesso
-        drawCircle(cx - r * 0.15, cy - r * 0.2, r * 0.35, BLACK);
-        drawCircle(cx - r * 0.15, cy - r * 0.2, r * 0.35 + 1, BLACK);
-        drawCircle(cx + r * 0.3, cy - r * 0.05, r * 0.4, BLACK);
-        drawCircle(cx + r * 0.3, cy - r * 0.05, r * 0.4 + 1, BLACK);
-        // Fulmine: zeta semplice
-        drawLine(cx - 1, cy + r * 0.1, cx - 3, cy + r * 0.3, BLACK);
-        drawLine(cx - 3, cy + r * 0.3, cx + 1, cy + r * 0.3, BLACK);
-        drawLine(cx + 1, cy + r * 0.3, cx - 1, cy + r * 0.5, BLACK);
+        // TEMPORALE: nuvola piena + gocce grandi
+        // Nuvola (due cerchi che si sovrappongono)
+        fillCircle(cx - r * 0.2, cy - r * 0.15, r * 0.4, BLACK);
+        fillCircle(cx + r * 0.25, cy - r * 0.05, r * 0.4, BLACK);
+        // Gocce grandi (puntini più grossi)
+        fillCircle(cx - r * 0.25, cy + r * 0.45, 4, BLACK);
+        fillCircle(cx + r * 0.05, cy + r * 0.45, 4, BLACK);
+        fillCircle(cx + r * 0.35, cy + r * 0.45, 4, BLACK);
 
     } else {
-        // DEFAULT: cerchio semplice
-        drawCircle(cx, cy, r * 0.5, BLACK);
-        drawCircle(cx, cy, r * 0.5 + 1, BLACK);
+        // DEFAULT: sole
+        fillCircle(cx, cy, r * 0.55, BLACK);
     }
 }
 
@@ -165,26 +156,22 @@ void InkHUD::WeatherApplet::onRender(bool full)
         return;
     }
 
-    // ---- Riga superiore: data sinistra + temp + umidita + icona grande destra ----
+    // ---- Riga superiore: data - temperatura + icona grande a destra ----
     setFont(fontLarge);
     
-    // Data: "08 Agosto" (approssimata, non abbiamo il calendario reale, usiamo valori statici per ora)
-    // In produzione questo verrebbe dal sistema RTC
-    printAt(X(0.02), Y(0.02), "08 Agosto", LEFT, TOP);
+    // Data e temperatura sulla stessa riga: "08 Agosto - 25°C"
+    char dateTemp[32];
+    snprintf(dateTemp, sizeof(dateTemp), "08 Agosto - %.0f\xB0" "C", currentTempC);
+    printAt(X(0.02), Y(0.02), dateTemp, LEFT, TOP);
 
-    // Temperatura attuale
-    char tempStr[16];
-    snprintf(tempStr, sizeof(tempStr), "%.0f\xB0" "C", currentTempC);
-    printAt(X(0.02), Y(0.12), tempStr, LEFT, TOP);
-
-    // Umidità
+    // Umidità sotto
     setFont(fontSmall);
     char humidStr[24];
     snprintf(humidStr, sizeof(humidStr), "Umidita %d%%", currentHumidity);
-    printAt(X(0.02), Y(0.22), humidStr, LEFT, TOP);
+    printAt(X(0.02), Y(0.14), humidStr, LEFT, TOP);
 
-    // Icona meteo GRANDE a destra (doppia dimensione)
-    drawWeatherIcon(X(0.82), Y(0.15), Y(0.28), currentWeatherCode);
+    // Icona meteo ANCORA PIÙ GRANDE a destra
+    drawWeatherIcon(X(0.85), Y(0.08), Y(0.32), currentWeatherCode);
 
     // ---- Riga centrale: temperatura percepita (più leggibile) ----
     setFont(fontSmall);
@@ -202,8 +189,8 @@ void InkHUD::WeatherApplet::onRender(bool full)
         int16_t colLeft = colWidth * i;
         int16_t colCenter = colLeft + colWidth / 2;
 
-        // Icona grande a SINISTRA della colonna (non centrata)
-        drawWeatherIcon(colLeft + X(0.08), Y(0.72), Y(0.18), forecast[i].weatherCode);
+        // Icona ancora più grande a SINISTRA della colonna
+        drawWeatherIcon(colLeft + X(0.08), Y(0.70), Y(0.22), forecast[i].weatherCode);
 
         // Temperatura MAX a DESTRA, in alto
         setFont(fontMedium);
@@ -215,7 +202,7 @@ void InkHUD::WeatherApplet::onRender(bool full)
         setFont(fontMedium);
         char tempMin[8];
         snprintf(tempMin, sizeof(tempMin), "%d\xB0", forecast[i].tempMinC);
-        printAt(colLeft + X(0.22), Y(0.68), tempMin, RIGHT, TOP);
+        printAt(colLeft + X(0.22), Y(0.70), tempMin, RIGHT, TOP);
 
         // Linea verticale tra colonne (se non è l'ultima)
         if (i > 0)
